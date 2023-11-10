@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>人脸检测</title>
+</head>
+<body>
+<h1>人脸检测</h1>
+
+<!-- 创建一个文件选择输入框 -->
+<input type="file" id="fileInput" onchange="checkFileExtension()">
+<!-- 创建一个状态文本，用于显示上传状态 -->
+<p id="status">等待上传</p>
+<p>
+    <button onclick="uploadFile()">提交</button>
+</p>
+<p>原图：<img id="faceImg2" src=""> &nbsp; 人脸检测图：<img id="faceImg" src=""></p>
+
+
+<script>
+    // 检查文件后缀名是否在允许的列表中
+    function checkFileExtension() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+
+        // 获取用户选择的文件
+        const file = fileInput.files[0];
+        if (file) {
+            // 获取文件名
+            const fileName = file.name;
+            // 获取文件后缀名
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+
+            // 检查文件后缀名是否在允许的列表中
+            if (!['png', 'jpg', 'pdf'].includes(fileExtension)) {
+                status.innerText = '只允许上传 .png, .jpg 或 .pdf 文件';
+                fileInput.value = ''; // 清空文件输入框
+            } else {
+                status.innerText = '文件符合要求';
+            }
+        }
+    }
+
+    // 当点击上传按钮时，执行上传文件的函数
+    function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        const faceImg = document.getElementById('faceImg');
+        const faceImg2 = document.getElementById('faceImg2');
+
+        // 获取用户选择的文件
+        const file = fileInput.files[0];
+        if (file) {
+            // 创建一个FormData对象，用于将文件数据发送到服务器
+            const formData = new FormData();
+            formData.append('file', file); // 将文件添加到FormData中
+
+            // 创建一个XMLHttpRequest对象，用于发送HTTP请求
+            const xhr = new XMLHttpRequest();
+
+            // 配置请求，指定上传的URL和请求方法
+            xhr.open('POST', 'v1.0/file_upload/', true);
+
+
+            // 监听上传完成事件
+            xhr.onload = function (res) {
+                if (xhr.status === 200) {
+                    if (res.target.response.split(",")[1] == "检测不到人脸") {
+                        faceImg2.src = res.target.response.split(",")[0]
+                        faceImg.src = ""
+                        status.innerText = '检测不到人脸';
+                        return;
+                    }
+                    faceImg2.src = res.target.response.split(",")[0]
+                    faceImg.src = res.target.response.split(",")[1]
+                    status.innerText = '上传完成';
+
+                } else {
+                    status.innerText = '上传失败';
+                }
+            };
+
+            // 监听上传错误事件
+            xhr.onerror = function () {
+                status.innerText = '上传错误';
+            };
+
+            // 发送FormData对象到服务器
+            xhr.send(formData);
+        } else {
+            status.innerText = '请选择文件';
+        }
+    }
+</script>
+</body>
+</html>
+
